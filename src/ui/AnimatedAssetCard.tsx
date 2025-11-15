@@ -12,6 +12,7 @@ type Asset = {
   id: string;
   title: string;
   balance: number;
+  type?: string;
   color?: string;
 };
 
@@ -32,6 +33,17 @@ export default function AnimatedAssetCard({
     };
   });
 
+  const getGradientColors = () => {
+    if (asset.type === 'bank') {
+      return ['#6C5CE7', '#3B3B98']; // Purple gradient
+    } else if (asset.type === 'cash') {
+      return ['#00B894', '#00A085']; // Green gradient
+    } else if (asset.type === 'credit') {
+      return ['#FD79A8', '#E84393']; // Pink gradient
+    }
+    return ['#74B9FF', '#0984E3']; // Default blue gradient
+  };
+
   return (
     <Animated.View style={[styles.wrapper, isLastOdd && styles.fullWidth, cardStyle]}>
       <TouchableOpacity
@@ -41,7 +53,7 @@ export default function AnimatedAssetCard({
         activeOpacity={1}
       >
         <LinearGradient
-          colors={[asset.color || "#6C5CE7", "#3B3B98"]}
+          colors={getGradientColors()}
           start={[0, 0]}
           end={[1, 1]}
           style={styles.card}

@@ -1,7 +1,8 @@
 // src/store/Store.tsx
 import "react-native-get-random-values";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { FirebaseService } from '../services/FirebaseService';
 
 type Asset = {
   id: string;
@@ -35,7 +36,7 @@ type Reminder = {
 
 type StoreShape = {
   user: any;
-  signInMock: (arg?: any) => void;
+  loading: boolean;
   signOut: () => void;
   assets: Asset[];
   createAsset: (a: Partial<Asset> & { initialBalance?: number }) => Asset;
@@ -126,15 +127,65 @@ const initialData = {
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
-  const [assets, setAssets] = useState<Asset[]>(initialData.assets);
-  const [transactions, setTransactions] = useState<Transaction[]>(initialData.transactions);
-  const [reminders, setReminders] = useState<Reminder[]>(initialData.reminders);
+  const [loading, setLoading] = useState(true);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
 
-  const signInMock = ({ name = "You", email = "you@example.com" } = {}) =>
-    setUser({ id: "local_user", name, email });
-  const signOut = () => setUser(null);
+  useEffect(() => {
+    // Initialize Firebase auth listener
+    const unsubscribe = FirebaseService.onAuthStateChanged((user) => {
+      setUser(user);
+      setLoading(false);
+      if (user) {
+        loadUserData();
+      } else {
+        setAssets([]);
+        setTransactions([]);
+        setReminders([]);
+      }
+    });
+    return unsubscribe;
+  }, []);
 
-  const createAsset = (asset: Partial<Asset> & { initialBalance?: number }) => {
+  const loadUserData = async () => {
+    try {
+      const [assetsData, transactionsData, remindersData] = await Promise.all([
+        FirebaseService.getDocuments('assets'),
+        FirebaseService.getDocuments('transactions'),
+        FirebaseService.getDocuments('reminders')
+      ]);
+      setAssets(assetsData.length > 0 ? assetsData : initialData.assets);
+      setTransactions(transactionsData.length > 0 ? transactionsData : initialData.transactions);
+      setReminders(remindersData.length > 0 ? remindersData : initialData.reminders);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      // Fallback to initial data
+      setAssets(initialData.assets);
+      setTransactions(initialData.transactions);
+      setReminders(initialData.reminders);
+    }
+  };
+
+  useEffect(() => {
+    // Load initial data when user is authenticated
+    if (user) {
+      setAssets(initialData.assets);
+      setTransactions(initialData.transactions);
+      setReminders(initialData.reminders);
+    }
+  }, [user]);
+
+  const signOut = async () => {
+    try {
+      await FirebaseService.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+      setUser(null);
+    }
+  };
+
+  const createAsset = async (asset: Partial<Asset> & { initialBalance?: number }) => {
     const doc: Asset = {
       id: uuidv4(),
       title: asset.title || "Untitled",
@@ -143,11 +194,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       balance: Number(asset.initialBalance || 0),
       color: asset.color || "#0984e3",
     };
-    setAssets((prev) => [doc, ...prev]);
+    try {
+      await FirebaseService.addDocument('assets', doc);
+      setAssets((prev) => [doc, ...prev]);
+    } catch (error) {
+      console.error('Error creating asset:', error);
+      // Still add locally as fallback
+      setAssets((prev) => [doc, ...prev]);
+    }
     return doc;
   };
 
-  const addTransaction = ({
+  const addTransaction = async ({
     amount,
     category,
     subcategory,
@@ -158,36 +216,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }: any) => {
     const amt = Number(amount);
     
-    setAssets((prevAssets) => {
-      const copy = [...prevAssets];
-      
-      if (category === "Transfer") {
-        // Handle transfer: deduct from fromAssetId, add to toAssetId
-        const fromIdx = copy.findIndex((a) => a.id === fromAssetId);
-        const toIdx = copy.findIndex((a) => a.id === toAssetId);
-        if (fromIdx !== -1) {
-          copy[fromIdx] = { ...copy[fromIdx], balance: Number(copy[fromIdx].balance) - amt };
-        }
-        if (toIdx !== -1) {
-          copy[toIdx] = { ...copy[toIdx], balance: Number(copy[toIdx].balance) + amt };
-        }
-      } else if (category === "Expense") {
-        // Handle expense: deduct from fromAssetId
-        const idx = copy.findIndex((a) => a.id === fromAssetId);
-        if (idx !== -1) {
-          copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) - amt };
-        }
-      } else {
-        // Handle income (Salary, Difference): add to toAssetId
-        const idx = copy.findIndex((a) => a.id === toAssetId);
-        if (idx !== -1) {
-          copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) + amt };
-        }
-      }
-      
-      return copy;
-    });
-
     const doc: Transaction = {
       id: uuidv4(),
       amount: amt,
@@ -198,6 +226,45 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       ...(fromAssetId && { fromAssetId }),
       ...(toAssetId && { toAssetId }),
     };
+
+    // Save to Firebase first
+    try {
+      if (user) {
+        await FirebaseService.addDocument('transactions', doc);
+        console.log('Transaction saved to Firebase');
+      }
+    } catch (error) {
+      console.error('Error saving transaction to Firebase:', error);
+    }
+    
+    // Update local state
+    setAssets((prevAssets) => {
+      const copy = [...prevAssets];
+      
+      if (category === "Transfer") {
+        const fromIdx = copy.findIndex((a) => a.id === fromAssetId);
+        const toIdx = copy.findIndex((a) => a.id === toAssetId);
+        if (fromIdx !== -1) {
+          copy[fromIdx] = { ...copy[fromIdx], balance: Number(copy[fromIdx].balance) - amt };
+        }
+        if (toIdx !== -1) {
+          copy[toIdx] = { ...copy[toIdx], balance: Number(copy[toIdx].balance) + amt };
+        }
+      } else if (category === "Expense") {
+        const idx = copy.findIndex((a) => a.id === fromAssetId);
+        if (idx !== -1) {
+          copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) - amt };
+        }
+      } else {
+        const idx = copy.findIndex((a) => a.id === toAssetId);
+        if (idx !== -1) {
+          copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) + amt };
+        }
+      }
+      
+      return copy;
+    });
+
     setTransactions((prev) => [doc, ...prev]);
     return doc;
   };
@@ -285,12 +352,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const addReminder = (reminder: Omit<Reminder, 'id' | 'createdAt'>) => {
+  const addReminder = async (reminder: Omit<Reminder, 'id' | 'createdAt'>) => {
     const doc: Reminder = {
       id: uuidv4(),
       ...reminder,
       createdAt: new Date(),
     };
+    
+    // Save to Firebase first
+    try {
+      if (user) {
+        await FirebaseService.addDocument('reminders', doc);
+        console.log('Reminder saved to Firebase');
+      }
+    } catch (error) {
+      console.error('Error saving reminder to Firebase:', error);
+    }
+    
     setReminders((prev) => [doc, ...prev]);
     return doc;
   };
@@ -350,7 +428,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const store: StoreShape = {
     user,
-    signInMock,
+    loading,
     signOut,
     assets,
     createAsset,

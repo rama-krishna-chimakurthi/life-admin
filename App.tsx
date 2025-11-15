@@ -27,23 +27,33 @@ import AssetDetail from "./src/screens/AssetDetail";
 import Reminders from "./src/screens/Reminders";
 import AddReminder from "./src/screens/AddReminder";
 import ReminderDetail from "./src/screens/ReminderDetail";
+import Auth from "./src/screens/Auth";
+import { useStore } from "./src/store/Store";
+import { AuthProvider, useAuth } from "./src/store/AuthStore";
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
-  // use real hook if you have one; otherwise keep light theme
+function AppNavigator() {
+  const { user, loading: authLoading } = useAuth();
+  const { loading } = useStore();
   const colorScheme = "light" as "light" | "dark";
 
+  if (authLoading || loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f6f8fb' }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return <Auth />;
+  }
+
   return (
-    // GestureHandlerRootView must be the ancestor of any GestureDetector / gestures
-    <GestureHandlerRootView>
-      <SafeAreaProvider>
-        {/* Wrap with StoreProvider if available; otherwise you can remove it */}
-        <StoreProvider
-          children={
-            <NavigationContainer
-              theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-            >
+    <NavigationContainer
+      theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+    >
               <Stack.Navigator>
                 <Stack.Screen
                   name="Dashboard"
@@ -81,9 +91,19 @@ export default function App() {
                   options={{ headerShown: false }}
                 />
               </Stack.Navigator>
-            </NavigationContainer>
-          }
-        />
+    </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <GestureHandlerRootView>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <StoreProvider>
+            <AppNavigator />
+          </StoreProvider>
+        </AuthProvider>
         <StatusBar style="auto" />
       </SafeAreaProvider>
     </GestureHandlerRootView>

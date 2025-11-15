@@ -1,13 +1,26 @@
 // src/screens/Dashboard.tsx
-import React from "react";
-import { View, Text, FlatList, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { View, Text, FlatList, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useStore } from "../store/Store";
+import { useAuth } from "../store/AuthStore";
 import AnimatedAssetCard from "../ui/AnimatedAssetCard";
 import AnimatedFAB from "../ui/AnimatedFAB";
+import AppIcon from "../components/AppIcon";
 
 export default function Dashboard({ navigation }: any) {
   const { assets, transactions, reminders } = useStore();
+  const { signOut } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const onRefresh = () => {
+    setRefreshing(true);
+    // Simulate data refresh
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
   const totalNetWorth = (assets || []).reduce((s, a) => s + Number(a.balance || 0), 0);
   const recent = (transactions || []).slice(0, 6);
   const upcomingReminders = (reminders || [])
@@ -17,6 +30,17 @@ export default function Dashboard({ navigation }: any) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f6f8fb" }}>
+      <ScrollView 
+        style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#3778C2"
+            colors={['#3778C2']}
+          />
+        }
+      >
       <View style={{ flex: 1, padding: 16 }}>
       <View
         style={{
@@ -25,33 +49,42 @@ export default function Dashboard({ navigation }: any) {
           alignItems: "center",
         }}
       >
-        <View>
-          <Text style={{ color: "#333", fontSize: 20, fontWeight: "600" }}>
-            Hi,
-          </Text>
-          <Text style={{ color: "#666", fontSize: 14 }}>Your Net Worth</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <AppIcon size={40} style={{ marginRight: 12 }} />
+          <View>
+            <Text style={{ color: "#333", fontSize: 20, fontWeight: "600" }}>
+              Hi,
+            </Text>
+            <Text style={{ color: "#666", fontSize: 14 }}>Your Net Worth</Text>
+          </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <TouchableOpacity
             onPress={() => navigation.navigate("Reminders")}
             style={{ marginRight: 12, padding: 8 }}
           >
-            <Text style={{ color: "#3778C2", fontSize: 24 }}>🔔</Text>
+            <Ionicons name="notifications" size={24} color="#3778C2" />
           </TouchableOpacity>
           <View
-            style={{ backgroundColor: "#3778C2", padding: 12, borderRadius: 12 }}
+            style={{ backgroundColor: "#3778C2", padding: 12, borderRadius: 12, marginRight: 8 }}
           >
             <Text style={{ color: "#fff", fontWeight: "700" }}>
               ₹{totalNetWorth.toLocaleString()}
             </Text>
           </View>
+          <TouchableOpacity
+            onPress={signOut}
+            style={{ padding: 8 }}
+          >
+            <MaterialIcons name="logout" size={20} color="#666" />
+          </TouchableOpacity>
         </View>
       </View>
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 18, marginBottom: 8 }}>
         <Text style={{ fontWeight: "700" }}>Accounts</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Accounts")}>
-          <Text style={{ color: "#3778C2", fontSize: 24 }}>+</Text>
+          <Ionicons name="add" size={24} color="#3778C2" />
         </TouchableOpacity>
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
@@ -164,6 +197,7 @@ export default function Dashboard({ navigation }: any) {
         onPress={() => navigation.navigate("Transactions", { openAdd: true })}
       />
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

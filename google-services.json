@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "629243027134",
+    "project_id": "life-admin-rk",
+    "storage_bucket": "life-admin-rk.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:629243027134:android:b870c7593ecc26e7c408ef",
+        "android_client_info": {
+          "package_name": "com.rk.lifeadmin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "629243027134-7g3e4saeto44qi75kdcp2kou5gdclg20.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rk.lifeadmin",
+            "certificate_hash": "ec69d8d048e6a0dea4b72ec2d1eeae05a5678867"
+          }
+        },
+        {
+          "client_id": "629243027134-a1bhss8rqaja5bhc1fn7ql0qp5eatbjv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rk.lifeadmin",
+            "certificate_hash": "c1bd7b54382ba876c728903b528ca1f3ba3af694"
+          }
+        },
+        {
+          "client_id": "629243027134-g7foo75h9vcv8bmoji3ab5behcnqabu2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rk.lifeadmin",
+            "certificate_hash": "58e1c5717a1aa0fc9e2f34a487d2337c0ee20f06"
+          }
+        },
+        {
+          "client_id": "629243027134-m19gr4q3erpvtoeh7lmuc4uf5u9bti21.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSWtTjYOyBBoGy2pLbwxjvJzaJYOwT0io"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "629243027134-m19gr4q3erpvtoeh7lmuc4uf5u9bti21.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

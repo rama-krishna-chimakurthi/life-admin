@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useStore } from "../store/Store";
 import { NotificationService } from "../services/NotificationService";
@@ -156,6 +157,8 @@ export default function AddReminder({ navigation, route }: any) {
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
               style={{
+                flexDirection: 'row',
+                alignItems: 'center',
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 backgroundColor: "#3778C2",
@@ -164,11 +167,14 @@ export default function AddReminder({ navigation, route }: any) {
                 marginBottom: 8,
               }}
             >
-              <Text style={{ color: "#fff", fontSize: 12 }}>📅 Date</Text>
+              <MaterialIcons name="date-range" size={14} color="#fff" style={{ marginRight: 4 }} />
+              <Text style={{ color: "#fff", fontSize: 12 }}>Date</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowTimePicker(true)}
               style={{
+                flexDirection: 'row',
+                alignItems: 'center',
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 backgroundColor: "#3778C2",
@@ -176,7 +182,8 @@ export default function AddReminder({ navigation, route }: any) {
                 marginBottom: 8,
               }}
             >
-              <Text style={{ color: "#fff", fontSize: 12 }}>🕐 Time</Text>
+              <MaterialIcons name="access-time" size={14} color="#fff" style={{ marginRight: 4 }} />
+              <Text style={{ color: "#fff", fontSize: 12 }}>Time</Text>
             </TouchableOpacity>
           </View>
         </View>

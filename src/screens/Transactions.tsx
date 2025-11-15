@@ -1,14 +1,23 @@
 // src/screens/Transactions.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, Modal } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, Modal, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from '@expo/vector-icons';
 import { useStore } from "../store/Store";
 import AddTransactionModal from "./modals/AddTransactionModal";
+import EmptyState from "../components/EmptyState";
 
-export default function Transactions({ route }: any) {
+export default function Transactions({ route, navigation }: any) {
   const { transactions, assets } = useStore();
   const [open, setOpen] = useState<boolean>(!!route?.params?.openAdd);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const filteredTransactions = transactions.filter(t => 
+    t.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.subcategory?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     if (route?.params?.openAdd) setOpen(true);
@@ -33,18 +42,52 @@ export default function Transactions({ route }: any) {
         <TouchableOpacity
           onPress={() => setOpen(true)}
           style={{
+            flexDirection: 'row',
+            alignItems: 'center',
             backgroundColor: "#3778C2",
             paddingHorizontal: 14,
             paddingVertical: 8,
             borderRadius: 8,
           }}
         >
-          <Text style={{ color: "#fff", fontWeight: "700" }}>+ Add</Text>
+          <Ionicons name="add" size={16} color="#fff" style={{ marginRight: 4 }} />
+          <Text style={{ color: "#fff", fontWeight: "700" }}>Add</Text>
         </TouchableOpacity>
       </View>
 
+      <View style={{ position: 'relative', marginBottom: 12 }}>
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search transactions..."
+          style={{
+            borderWidth: 1,
+            borderColor: "#e6eef7",
+            padding: 12,
+            paddingLeft: 40,
+            borderRadius: 8,
+            backgroundColor: "#fff"
+          }}
+        />
+        <Ionicons 
+          name="search" 
+          size={20} 
+          color="#666" 
+          style={{ position: 'absolute', left: 12, top: 12 }} 
+        />
+      </View>
+
+      {filteredTransactions.length === 0 ? (
+        <EmptyState
+          title={searchQuery ? "No Results" : "No Transactions"}
+          message={searchQuery ? "No transactions match your search" : "Start by adding your first transaction"}
+          actionText={searchQuery ? undefined : "Add Transaction"}
+          onAction={searchQuery ? undefined : () => setOpen(true)}
+          iconName={searchQuery ? "search" : "account-balance-wallet"}
+        />
+      ) : (
       <FlatList
-        data={transactions}
+        data={filteredTransactions}
         keyExtractor={(i) => i.id}
         renderItem={({ item }) => {
           const categoryColors = {
@@ -89,6 +132,7 @@ export default function Transactions({ route }: any) {
           </TouchableOpacity>
         )}}
       />
+      )}
 
       <Modal visible={open} animationType="slide">
         <AddTransactionModal 
