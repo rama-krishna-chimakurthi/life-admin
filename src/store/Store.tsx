@@ -39,17 +39,17 @@ type StoreShape = {
   loading: boolean;
   signOut: () => void;
   assets: Asset[];
-  createAsset: (a: Partial<Asset> & { initialBalance?: number }) => Asset;
+  createAsset: (a: Partial<Asset> & { initialBalance?: number }) => Promise<Asset>;
   updateAsset: (id: string, patch: Partial<Asset>) => void;
   transactions: Transaction[];
   addTransaction: (
     t: Partial<Transaction> & { amount: number; category: Transaction['category'] }
-  ) => Transaction | undefined;
+  ) => Promise<Transaction | undefined>;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
 
   reminders: Reminder[];
-  addReminder: (r: Omit<Reminder, 'id' | 'createdAt'>) => Reminder;
+  addReminder: (r: Omit<Reminder, 'id' | 'createdAt'>) => Promise<Reminder>;
   updateReminder: (id: string, updates: Partial<Reminder>) => Reminder;
   deleteReminder: (id: string) => void;
 };
@@ -155,26 +155,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         FirebaseService.getDocuments('transactions'),
         FirebaseService.getDocuments('reminders')
       ]);
-      setAssets(assetsData.length > 0 ? assetsData : initialData.assets);
-      setTransactions(transactionsData.length > 0 ? transactionsData : initialData.transactions);
-      setReminders(remindersData.length > 0 ? remindersData : initialData.reminders);
+      setAssets(assetsData as Asset[] || []);
+      setTransactions(transactionsData as Transaction[] || []);
+      setReminders(remindersData as Reminder[] || []);
     } catch (error) {
       console.error('Error loading user data:', error);
-      // Fallback to initial data
-      setAssets(initialData.assets);
-      setTransactions(initialData.transactions);
-      setReminders(initialData.reminders);
+      // Set empty arrays on error
+      setAssets([]);
+      setTransactions([]);
+      setReminders([]);
     }
   };
 
-  useEffect(() => {
-    // Load initial data when user is authenticated
-    if (user) {
-      setAssets(initialData.assets);
-      setTransactions(initialData.transactions);
-      setReminders(initialData.reminders);
-    }
-  }, [user]);
+
 
   const signOut = async () => {
     try {

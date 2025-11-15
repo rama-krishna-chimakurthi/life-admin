@@ -115,7 +115,7 @@ export default function AddTransactionModal({ onClose, editingTransaction }: any
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View style={{ flex: 1, backgroundColor: "#fff", paddingTop: 50 }}>
       <ScrollView style={{ flex: 1, padding: 18 }} contentContainerStyle={{ paddingBottom: 50 }}>
       <View
         style={{
