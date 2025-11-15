@@ -10,15 +10,11 @@ import { GoogleAuthProvider, signInWithCredential, User } from "firebase/auth";
 import { auth } from "../config/firebase";
 
 GoogleSignin.configure({
-  webClientId: "629243027134-ccd8f73b891c4877c408ef.apps.googleusercontent.com",
+  webClientId:
+    "629243027134-m19gr4q3erpvtoeh7lmuc4uf5u9bti21.apps.googleusercontent.com",
   scopes: ["https://www.googleapis.com/auth/drive.readonly"],
   offlineAccess: false, // if you want to access Google API on behalf of the user FROM YOUR SERVER
-  hostedDomain: "", // specifies a hosted domain restriction
   forceCodeForRefreshToken: false, // [Android] related to `serverAuthCode`, read the docs link below *.
-  accountName: "", // [Android] specifies an account name on the device that should be used
-  //iosClientId: '<FROM DEVELOPER CONSOLE>', // [iOS] if you want to specify the client ID of type iOS (otherwise, it is taken from GoogleService-Info.plist)
-  googleServicePlistPath: "", // [iOS] if you renamed your GoogleService-Info file, new name here, e.g. "GoogleService-Info-Staging"
-  openIdRealm: "", // [iOS] The OpenID2 realm of the home web server. This allows Google to include the user's OpenID Identifier in the OpenID Connect ID token.
   profileImageSize: 120, // [iOS] The desired height (and width) of the profile image. Defaults to 120px
 });
 
@@ -55,8 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Google Sign-In Success:", response.data);
         let idToken = response.data.idToken;
         if (idToken) {
+          console.log("Got idToken, signing in to Firebase...");
           const credential = GoogleAuthProvider.credential(idToken);
-          await signInWithCredential(auth, credential);
+          const result = await signInWithCredential(auth, credential);
+          console.log("Firebase sign-in successful:", result.user.email);
+        } else {
+          console.log("No idToken received from Google");
         }
       } else {
         // sign in was cancelled by user
