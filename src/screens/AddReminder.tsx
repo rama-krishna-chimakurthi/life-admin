@@ -46,10 +46,12 @@ export default function AddReminder({ navigation, route }: any) {
   };
   const [notes, setNotes] = useState(editingReminder?.notes || "");
   const [recurrence, setRecurrence] = useState(editingReminder?.recurrence || "One-time");
-
+  const [disabled, setDisabled] = useState(false);
   const handleSave = async () => {
+    setDisabled(true);
     if (!title.trim()) {
       Alert.alert("Error", "Please enter a title");
+      setDisabled(false);
       return;
     }
 
@@ -93,7 +95,7 @@ export default function AddReminder({ navigation, route }: any) {
             <Text style={{ color: "#666" }}>Cancel</Text>
           </TouchableOpacity>
           <Text style={{ fontSize: 18, fontWeight: "700" }}>{editingReminder ? "Edit Reminder" : "Add Reminder"}</Text>
-          <TouchableOpacity onPress={handleSave}>
+          <TouchableOpacity onPress={handleSave} disabled={disabled}>
             <Text style={{ color: "#3778C2", fontWeight: "700" }}>Save</Text>
           </TouchableOpacity>
         </View>
