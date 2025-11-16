@@ -1,4 +1,4 @@
-{
+module.exports = {
   "expo": {
     "name": "life-admin",
     "slug": "life-admin",
@@ -25,7 +25,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.rk.lifeadmin",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": process.env.GOOGLE_SERVICES_JSON || "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
