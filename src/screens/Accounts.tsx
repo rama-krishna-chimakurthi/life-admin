@@ -17,6 +17,7 @@ export default function Accounts({ navigation }: any) {
   const [title, setTitle] = useState("");
   const [balance, setBalance] = useState("");
   const [type, setType] = useState("bank");
+  //Test
 
   const handleSave = () => {
     if (!title.trim()) {
