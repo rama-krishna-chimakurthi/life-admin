@@ -25,7 +25,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.rk.lifeadmin",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "$GOOGLE_SERVICES_JSON"
     },
     "web": {
       "favicon": "./assets/favicon.png"
