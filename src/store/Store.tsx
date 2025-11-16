@@ -1,8 +1,6 @@
 // src/store/Store.tsx
-import "react-native-get-random-values";
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { FirebaseService } from '../services/FirebaseService';
+import { FirebaseService } from "../services/FirebaseService";
 
 type Asset = {
   id: string;
@@ -15,7 +13,7 @@ type Asset = {
 type Transaction = {
   id: string;
   amount: number;
-  category: 'Expense' | 'Transfer' | 'Salary' | 'Difference';
+  category: "Expense" | "Transfer" | "Income" | "Difference";
   date: Date;
   notes?: string;
   subcategory?: string;
@@ -39,91 +37,30 @@ type StoreShape = {
   loading: boolean;
   signOut: () => void;
   assets: Asset[];
-  createAsset: (a: Partial<Asset> & { initialBalance?: number }) => Promise<Asset>;
+  createAsset: (
+    a: Partial<Asset> & { initialBalance?: number }
+  ) => Promise<Asset>;
   updateAsset: (id: string, patch: Partial<Asset>) => void;
   transactions: Transaction[];
   addTransaction: (
-    t: Partial<Transaction> & { amount: number; category: Transaction['category'] }
+    t: Partial<Transaction> & {
+      amount: number;
+      category: Transaction["category"];
+    }
   ) => Promise<Transaction | undefined>;
-  updateTransaction: (id: string, updates: Partial<Transaction>) => void;
+  updateTransaction: (
+    id: string,
+    updates: Partial<Transaction>
+  ) => Promise<void>;
   deleteTransaction: (id: string) => void;
 
   reminders: Reminder[];
-  addReminder: (r: Omit<Reminder, 'id' | 'createdAt'>) => Promise<Reminder>;
+  addReminder: (r: Omit<Reminder, "id" | "createdAt">) => Promise<Reminder>;
   updateReminder: (id: string, updates: Partial<Reminder>) => Reminder;
   deleteReminder: (id: string) => void;
 };
 
 const StoreContext = createContext<StoreShape | null>(null);
-
-const initialData = {
-  assets: [
-    {
-      id: "a_bank_1",
-      title: "HDFC Savings",
-      type: "bank",
-      currency: "INR",
-      balance: 50000,
-      color: "#6C5CE7",
-    },
-    {
-      id: "a_cash_1",
-      title: "Cash Wallet",
-      type: "cash",
-      currency: "INR",
-      balance: 2500,
-      color: "#00B894",
-    },
-    {
-      id: "a_cc_1",
-      title: "Axis Credit",
-      type: "credit",
-      currency: "INR",
-      balance: -12000,
-      color: "#FD79A8",
-    },
-  ] as Asset[],
-  transactions: [
-    {
-      id: "t1",
-      amount: 250,
-      category: "Expense" as const,
-      subcategory: "Food",
-      date: new Date(),
-      fromAssetId: "a_cash_1",
-      notes: "Lunch",
-    },
-    {
-      id: "t2",
-      amount: 1200,
-      category: "Expense" as const,
-      subcategory: "Fuel",
-      date: new Date(Date.now() - 86400000),
-      fromAssetId: "a_bank_1",
-      notes: "Petrol",
-    },
-  ] as Transaction[],
-  reminders: [
-    {
-      id: "r1",
-      title: "Pay Credit Card Bill",
-      category: "Finance",
-      dueDate: new Date(Date.now() + 86400000 * 3),
-      notes: "Axis Bank credit card payment due",
-      recurrence: "Monthly",
-      createdAt: new Date(),
-    },
-    {
-      id: "r2",
-      title: "Vehicle Insurance Renewal",
-      category: "Vehicle",
-      dueDate: new Date(Date.now() + 86400000 * 7),
-      notes: "Car insurance expires next week",
-      recurrence: "One-time",
-      createdAt: new Date(),
-    },
-  ] as Reminder[],
-};
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
@@ -133,7 +70,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [reminders, setReminders] = useState<Reminder[]>([]);
 
   useEffect(() => {
-    // Initialize Firebase auth listener
     const unsubscribe = FirebaseService.onAuthStateChanged((user) => {
       setUser(user);
       setLoading(false);
@@ -151,51 +87,52 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const loadUserData = async () => {
     try {
       const [assetsData, transactionsData, remindersData] = await Promise.all([
-        FirebaseService.getDocuments('assets'),
-        FirebaseService.getDocuments('transactions'),
-        FirebaseService.getDocuments('reminders')
+        FirebaseService.getDocuments("assets"),
+        FirebaseService.getDocuments("transactions"),
+        FirebaseService.getDocuments("reminders"),
       ]);
-      setAssets(assetsData as Asset[] || []);
-      setTransactions(transactionsData as Transaction[] || []);
-      setReminders(remindersData as Reminder[] || []);
+      setAssets((assetsData as Asset[]) || []);
+      setTransactions((transactionsData as Transaction[]) || []);
+      setReminders((remindersData as Reminder[]) || []);
     } catch (error) {
-      console.error('Error loading user data:', error);
-      // Set empty arrays on error
+      console.error("Error loading user data:", error);
       setAssets([]);
       setTransactions([]);
       setReminders([]);
     }
   };
 
-
-
   const signOut = async () => {
     try {
       await FirebaseService.signOut();
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
       setUser(null);
     }
   };
 
-  const createAsset = async (asset: Partial<Asset> & { initialBalance?: number }) => {
-    const doc: Asset = {
-      id: uuidv4(),
+  const createAsset = async (
+    asset: Partial<Asset> & { initialBalance?: number }
+  ) => {
+    const doc = {
       title: asset.title || "Untitled",
       type: asset.type || "bank",
       currency: asset.currency || "INR",
       balance: Number(asset.initialBalance || 0),
       color: asset.color || "#0984e3",
     };
+
+    let newAsset: Asset;
     try {
-      await FirebaseService.addDocument('assets', doc);
-      setAssets((prev) => [doc, ...prev]);
+      const savedDoc = await FirebaseService.addDocument("assets", doc);
+      newAsset = { ...doc, id: savedDoc.id };
+      setAssets((prev) => [newAsset, ...prev]);
     } catch (error) {
-      console.error('Error creating asset:', error);
-      // Still add locally as fallback
-      setAssets((prev) => [doc, ...prev]);
+      console.error("Error creating asset:", error);
+      newAsset = { ...doc, id: Date.now().toString() };
+      setAssets((prev) => [newAsset, ...prev]);
     }
-    return doc;
+    return newAsset;
   };
 
   const addTransaction = async ({
@@ -208,9 +145,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     notes,
   }: any) => {
     const amt = Number(amount);
-    
-    const doc: Transaction = {
-      id: uuidv4(),
+
+    const doc = {
       amount: amt,
       category,
       subcategory,
@@ -220,49 +156,66 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       ...(toAssetId && { toAssetId }),
     };
 
-    // Save to Firebase first
+    let newTransaction: Transaction;
     try {
       if (user) {
-        await FirebaseService.addDocument('transactions', doc);
-        console.log('Transaction saved to Firebase');
+        const savedDoc = await FirebaseService.addDocument("transactions", doc);
+        newTransaction = { ...doc, id: savedDoc.id };
+        console.log("Transaction saved to Firebase");
+      } else {
+        newTransaction = { ...doc, id: Date.now().toString() };
       }
     } catch (error) {
-      console.error('Error saving transaction to Firebase:', error);
+      console.error("Error saving transaction to Firebase:", error);
+      newTransaction = { ...doc, id: Date.now().toString() };
     }
-    
+
     // Update local state
     setAssets((prevAssets) => {
       const copy = [...prevAssets];
-      
+
       if (category === "Transfer") {
         const fromIdx = copy.findIndex((a) => a.id === fromAssetId);
         const toIdx = copy.findIndex((a) => a.id === toAssetId);
         if (fromIdx !== -1) {
-          copy[fromIdx] = { ...copy[fromIdx], balance: Number(copy[fromIdx].balance) - amt };
+          copy[fromIdx] = {
+            ...copy[fromIdx],
+            balance: Number(copy[fromIdx].balance) - amt,
+          };
         }
         if (toIdx !== -1) {
-          copy[toIdx] = { ...copy[toIdx], balance: Number(copy[toIdx].balance) + amt };
+          copy[toIdx] = {
+            ...copy[toIdx],
+            balance: Number(copy[toIdx].balance) + amt,
+          };
         }
       } else if (category === "Expense") {
         const idx = copy.findIndex((a) => a.id === fromAssetId);
         if (idx !== -1) {
-          copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) - amt };
+          copy[idx] = {
+            ...copy[idx],
+            balance: Number(copy[idx].balance) - amt,
+          };
         }
       } else {
         const idx = copy.findIndex((a) => a.id === toAssetId);
         if (idx !== -1) {
-          copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) + amt };
+          copy[idx] = {
+            ...copy[idx],
+            balance: Number(copy[idx].balance) + amt,
+          };
         }
       }
-      
+
       return copy;
     });
 
-    setTransactions((prev) => [doc, ...prev]);
-    return doc;
+    setTransactions((prev) => [
+      newTransaction,
+      ...prev.filter((t) => t.id !== newTransaction.id),
+    ]);
+    return newTransaction;
   };
-
-
 
   const updateAsset = (assetId: string, patch: Partial<Asset>) => {
     setAssets((prev) =>
@@ -270,153 +223,226 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const updateTransaction = (transactionId: string, updates: Partial<Transaction>) => {
+  const updateTransaction = async (
+    transactionId: string,
+    updates: Partial<Transaction>
+  ) => {
+    const oldTransaction = transactions.find((t) => t.id === transactionId);
+    if (!oldTransaction) return;
+
+    const newTransaction = { ...oldTransaction, ...updates };
+
+    try {
+      if (user) {
+        try {
+          await FirebaseService.updateDocument(
+            "transactions",
+            transactionId,
+            newTransaction
+          );
+          console.log("Transaction updated in Firebase");
+        } catch (updateError) {
+          console.log("Document not found, creating new one");
+          await FirebaseService.addDocument("transactions", {
+            ...newTransaction,
+            id: transactionId,
+          });
+          console.log("Transaction created in Firebase");
+        }
+      }
+    } catch (error) {
+      console.error("Error saving transaction to Firebase:", error);
+    }
+
+    // Update local state
     setTransactions((prev) => {
-      const oldTransaction = prev.find(t => t.id === transactionId);
-      if (!oldTransaction) return prev;
-      
       // Reverse the old transaction's effect on assets
       setAssets((prevAssets) => {
         const copy = [...prevAssets];
         const oldAmt = Number(oldTransaction.amount);
-        
+
         if (oldTransaction.category === "Transfer") {
-          // Reverse transfer: add back to from, subtract from to
-          const fromIdx = copy.findIndex((a) => a.id === oldTransaction.fromAssetId);
-          const toIdx = copy.findIndex((a) => a.id === oldTransaction.toAssetId);
+          const fromIdx = copy.findIndex(
+            (a) => a.id === oldTransaction.fromAssetId
+          );
+          const toIdx = copy.findIndex(
+            (a) => a.id === oldTransaction.toAssetId
+          );
           if (fromIdx !== -1) {
-            copy[fromIdx] = { ...copy[fromIdx], balance: Number(copy[fromIdx].balance) + oldAmt };
+            copy[fromIdx] = {
+              ...copy[fromIdx],
+              balance: Number(copy[fromIdx].balance) + oldAmt,
+            };
           }
           if (toIdx !== -1) {
-            copy[toIdx] = { ...copy[toIdx], balance: Number(copy[toIdx].balance) - oldAmt };
+            copy[toIdx] = {
+              ...copy[toIdx],
+              balance: Number(copy[toIdx].balance) - oldAmt,
+            };
           }
         } else if (oldTransaction.category === "Expense") {
-          // Reverse expense: add back to fromAssetId
-          const idx = copy.findIndex((a) => a.id === oldTransaction.fromAssetId);
+          const idx = copy.findIndex(
+            (a) => a.id === oldTransaction.fromAssetId
+          );
           if (idx !== -1) {
-            copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) + oldAmt };
+            copy[idx] = {
+              ...copy[idx],
+              balance: Number(copy[idx].balance) + oldAmt,
+            };
           }
         } else {
-          // Reverse income: subtract from toAssetId
           const idx = copy.findIndex((a) => a.id === oldTransaction.toAssetId);
           if (idx !== -1) {
-            copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) - oldAmt };
+            copy[idx] = {
+              ...copy[idx],
+              balance: Number(copy[idx].balance) - oldAmt,
+            };
           }
         }
-        
+
         return copy;
       });
-      
+
       // Apply the new transaction's effect on assets
-      const newTransaction = { ...oldTransaction, ...updates };
       const newAmt = Number(newTransaction.amount);
-      
+
       setAssets((prevAssets) => {
         const copy = [...prevAssets];
-        
+
         if (newTransaction.category === "Transfer") {
-          // Apply transfer: subtract from from, add to to
-          const fromIdx = copy.findIndex((a) => a.id === newTransaction.fromAssetId);
-          const toIdx = copy.findIndex((a) => a.id === newTransaction.toAssetId);
+          const fromIdx = copy.findIndex(
+            (a) => a.id === newTransaction.fromAssetId
+          );
+          const toIdx = copy.findIndex(
+            (a) => a.id === newTransaction.toAssetId
+          );
           if (fromIdx !== -1) {
-            copy[fromIdx] = { ...copy[fromIdx], balance: Number(copy[fromIdx].balance) - newAmt };
+            copy[fromIdx] = {
+              ...copy[fromIdx],
+              balance: Number(copy[fromIdx].balance) - newAmt,
+            };
           }
           if (toIdx !== -1) {
-            copy[toIdx] = { ...copy[toIdx], balance: Number(copy[toIdx].balance) + newAmt };
+            copy[toIdx] = {
+              ...copy[toIdx],
+              balance: Number(copy[toIdx].balance) + newAmt,
+            };
           }
         } else if (newTransaction.category === "Expense") {
-          // Apply expense: subtract from fromAssetId
-          const idx = copy.findIndex((a) => a.id === newTransaction.fromAssetId);
+          const idx = copy.findIndex(
+            (a) => a.id === newTransaction.fromAssetId
+          );
           if (idx !== -1) {
-            copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) - newAmt };
+            copy[idx] = {
+              ...copy[idx],
+              balance: Number(copy[idx].balance) - newAmt,
+            };
           }
         } else {
-          // Apply income: add to toAssetId
           const idx = copy.findIndex((a) => a.id === newTransaction.toAssetId);
           if (idx !== -1) {
-            copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) + newAmt };
+            copy[idx] = {
+              ...copy[idx],
+              balance: Number(copy[idx].balance) + newAmt,
+            };
           }
         }
-        
+
         return copy;
       });
-      
+
       return prev.map((t) => (t.id === transactionId ? newTransaction : t));
     });
   };
 
-  const addReminder = async (reminder: Omit<Reminder, 'id' | 'createdAt'>) => {
-    const doc: Reminder = {
-      id: uuidv4(),
+  const addReminder = async (reminder: Omit<Reminder, "id" | "createdAt">) => {
+    const doc = {
       ...reminder,
       createdAt: new Date(),
     };
-    
-    // Save to Firebase first
+
+    let newReminder: Reminder;
     try {
       if (user) {
-        await FirebaseService.addDocument('reminders', doc);
-        console.log('Reminder saved to Firebase');
+        const savedDoc = await FirebaseService.addDocument("reminders", doc);
+        newReminder = { ...doc, id: savedDoc.id };
+        console.log("Reminder saved to Firebase");
+      } else {
+        newReminder = { ...doc, id: Date.now().toString() };
       }
     } catch (error) {
-      console.error('Error saving reminder to Firebase:', error);
+      console.error("Error saving reminder to Firebase:", error);
+      newReminder = { ...doc, id: Date.now().toString() };
     }
-    
-    setReminders((prev) => [doc, ...prev]);
-    return doc;
+
+    setReminders((prev) => [newReminder, ...prev]);
+    return newReminder;
   };
 
   const deleteTransaction = (transactionId: string) => {
     setTransactions((prev) => {
-      const transaction = prev.find(t => t.id === transactionId);
+      const transaction = prev.find((t) => t.id === transactionId);
       if (!transaction) return prev;
-      
+
       // Reverse the transaction's effect on assets
       setAssets((prevAssets) => {
         const copy = [...prevAssets];
         const amt = Number(transaction.amount);
-        
+
         if (transaction.category === "Transfer") {
-          // Reverse transfer: add back to from, subtract from to
-          const fromIdx = copy.findIndex((a) => a.id === transaction.fromAssetId);
+          const fromIdx = copy.findIndex(
+            (a) => a.id === transaction.fromAssetId
+          );
           const toIdx = copy.findIndex((a) => a.id === transaction.toAssetId);
           if (fromIdx !== -1) {
-            copy[fromIdx] = { ...copy[fromIdx], balance: Number(copy[fromIdx].balance) + amt };
+            copy[fromIdx] = {
+              ...copy[fromIdx],
+              balance: Number(copy[fromIdx].balance) + amt,
+            };
           }
           if (toIdx !== -1) {
-            copy[toIdx] = { ...copy[toIdx], balance: Number(copy[toIdx].balance) - amt };
+            copy[toIdx] = {
+              ...copy[toIdx],
+              balance: Number(copy[toIdx].balance) - amt,
+            };
           }
         } else if (transaction.category === "Expense") {
-          // Reverse expense: add back to fromAssetId
           const idx = copy.findIndex((a) => a.id === transaction.fromAssetId);
           if (idx !== -1) {
-            copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) + amt };
+            copy[idx] = {
+              ...copy[idx],
+              balance: Number(copy[idx].balance) + amt,
+            };
           }
         } else {
-          // Reverse income: subtract from toAssetId
           const idx = copy.findIndex((a) => a.id === transaction.toAssetId);
           if (idx !== -1) {
-            copy[idx] = { ...copy[idx], balance: Number(copy[idx].balance) - amt };
+            copy[idx] = {
+              ...copy[idx],
+              balance: Number(copy[idx].balance) - amt,
+            };
           }
         }
-        
+
         return copy;
       });
-      
-      return prev.filter(t => t.id !== transactionId);
+
+      return prev.filter((t) => t.id !== transactionId);
     });
   };
 
   const updateReminder = (reminderId: string, updates: Partial<Reminder>) => {
     setReminders((prev) => {
-      const updated = prev.map(r => r.id === reminderId ? { ...r, ...updates } : r);
+      const updated = prev.map((r) =>
+        r.id === reminderId ? { ...r, ...updates } : r
+      );
       return updated;
     });
-    return reminders.find(r => r.id === reminderId)!;
+    return reminders.find((r) => r.id === reminderId)!;
   };
 
   const deleteReminder = (reminderId: string) => {
-    setReminders((prev) => prev.filter(r => r.id !== reminderId));
+    setReminders((prev) => prev.filter((r) => r.id !== reminderId));
   };
 
   const store: StoreShape = {

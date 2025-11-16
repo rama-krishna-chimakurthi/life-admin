@@ -63,7 +63,7 @@ export default function AddReminder({ navigation, route }: any) {
 
     const reminder = editingReminder 
       ? updateReminder(editingReminder.id, reminderData)
-      : addReminder(reminderData);
+      : await addReminder(reminderData);
 
     // Handle notifications
     try {

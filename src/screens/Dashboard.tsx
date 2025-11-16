@@ -32,8 +32,8 @@ export default function Dashboard({ navigation }: any) {
     (s, a) => s + Number(a.balance || 0),
     0
   );
-  const recent = (transactions || []).slice(0, 6);
-  const upcomingReminders = (reminders || [])
+  const recent = Array.isArray(transactions) ? transactions.slice(0, 6) : [];
+  const upcomingReminders = Array.isArray(reminders) ? reminders : []
     .filter((r) => new Date(r.dueDate) >= new Date())
     .sort(
       (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
@@ -219,7 +219,10 @@ export default function Dashboard({ navigation }: any) {
                   }}
                   onPress={() =>
                     navigation.navigate("Transactions", {
-                      editTransaction: item,
+                      editTransaction: {
+                        ...item,
+                        date: typeof item.date === 'string' ? item.date : item.date?.toISOString?.() || new Date().toISOString(),
+                      },
                     })
                   }
                 >
