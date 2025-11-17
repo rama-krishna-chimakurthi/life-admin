@@ -442,6 +442,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteReminder = (reminderId: string) => {
+    if (user) {
+      FirebaseService.deleteDocument("reminders", reminderId);
+    }
     setReminders((prev) => prev.filter((r) => r.id !== reminderId));
   };
 
