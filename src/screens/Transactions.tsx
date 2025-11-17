@@ -22,7 +22,7 @@ export default function Transactions({ route, navigation }: any) {
 
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
   const safeAssets = Array.isArray(assets) ? assets : [];
-  
+
   const filteredTransactions = safeTransactions.filter(
     (t) =>
       t.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -139,7 +139,7 @@ export default function Transactions({ route, navigation }: any) {
                   >
                     <Text style={{ fontWeight: "700" }}>₹{item.amount}</Text>
                     <Text style={{ color: "#666" }}>
-                      {new Date(item.date).toLocaleDateString()}
+                      {item.date.toDate().toLocaleString()}
                     </Text>
                   </View>
                   <Text style={{ color: "#666" }}>
@@ -150,7 +150,8 @@ export default function Transactions({ route, navigation }: any) {
                   {(item.fromAssetId || item.toAssetId) && (
                     <Text style={{ color: "#888", fontSize: 12, marginTop: 4 }}>
                       {item.fromAssetId &&
-                        safeAssets.find((a) => a.id === item.fromAssetId)?.title}
+                        safeAssets.find((a) => a.id === item.fromAssetId)
+                          ?.title}
                       {item.fromAssetId && item.toAssetId && " → "}
                       {item.toAssetId &&
                         safeAssets.find((a) => a.id === item.toAssetId)?.title}

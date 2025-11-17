@@ -10,7 +10,8 @@ import {
   ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useStore } from "../../store/Store";
+import { Transaction, useStore } from "../../store/Store";
+import { Timestamp } from "firebase/firestore";
 
 function parseNumericInput(input: string) {
   if (!input) return 0;
@@ -42,7 +43,10 @@ const subcategories = {
 export default function AddTransactionModal({
   onClose,
   editingTransaction,
-}: any) {
+}: {
+  onClose: () => void;
+  editingTransaction: Transaction | undefined;
+}) {
   const {
     assets,
     addTransaction,
@@ -63,9 +67,7 @@ export default function AddTransactionModal({
   );
   const [showCustomSubcategory, setShowCustomSubcategory] = useState(false);
   const [customSubcategory, setCustomSubcategory] = useState("");
-  const [assetId, setAssetId] = useState<string | null>(
-    editingTransaction ? editingTransaction.assetId : safeAssets[0]?.id || null
-  );
+
   const [fromAssetId, setFromAssetId] = useState<string | null>(
     editingTransaction
       ? editingTransaction.fromAssetId || null
@@ -79,13 +81,12 @@ export default function AddTransactionModal({
   const [notes, setNotes] = useState(
     editingTransaction ? editingTransaction.notes || "" : ""
   );
+  console.log("editingTransaction:", editingTransaction);
   const [date, setDate] = useState(
-    editingTransaction ? new Date(editingTransaction.date) : new Date()
+    editingTransaction ? editingTransaction.date.toDate() : new Date()
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [newAssetTitle, setNewAssetTitle] = useState("");
-  const [newAssetBalance, setNewAssetBalance] = useState("0");
 
   const onSave = () => {
     // parse amount to number
@@ -130,7 +131,7 @@ export default function AddTransactionModal({
           ? fromAssetId!
           : toAssetId!,
       notes,
-      date: date,
+      date: Timestamp.fromDate(date),
       ...(category === "Transfer" && { fromAssetId, toAssetId }),
       ...(category === "Expense" && { fromAssetId }),
       ...(category !== "Expense" && category !== "Transfer" && { toAssetId }),

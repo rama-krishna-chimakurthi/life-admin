@@ -1,6 +1,7 @@
 // src/store/Store.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { FirebaseService } from "../services/FirebaseService";
+import { Timestamp } from "firebase/firestore";
 
 type Asset = {
   id: string;
@@ -10,26 +11,26 @@ type Asset = {
   balance: number;
   color?: string;
 };
-type Transaction = {
+export type Transaction = {
   id: string;
   amount: number;
   category: "Expense" | "Transfer" | "Income" | "Difference";
-  date: Date;
+  date: Timestamp;
   notes?: string;
   subcategory?: string;
   fromAssetId?: string;
   toAssetId?: string;
 };
 
-type Reminder = {
+export type Reminder = {
   id: string;
   title: string;
   category: string;
-  dueDate: Date;
+  dueDate: Timestamp;
   notes?: string;
   recurrence: string;
   attachmentUrl?: string;
-  createdAt: Date;
+  createdAt: Timestamp;
 };
 
 type StoreShape = {
@@ -150,7 +151,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       amount: amt,
       category,
       subcategory,
-      date: date ? new Date(date) : new Date(),
+      date: date ? date : Timestamp.now(),
       notes: notes || "",
       ...(fromAssetId && { fromAssetId }),
       ...(toAssetId && { toAssetId }),
@@ -358,7 +359,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const addReminder = async (reminder: Omit<Reminder, "id" | "createdAt">) => {
     const doc = {
       ...reminder,
-      createdAt: new Date(),
+      createdAt: Timestamp.now(),
     };
 
     let newReminder: Reminder;

@@ -10,11 +10,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useStore } from "../store/Store";
+import { Reminder, useStore } from "../store/Store";
 import { useAuth } from "../store/AuthStore";
 import AnimatedAssetCard from "../ui/AnimatedAssetCard";
 import AnimatedFAB from "../ui/AnimatedFAB";
 import AppIcon from "../components/AppIcon";
+import { Timestamp } from "firebase/firestore";
 
 export default function Dashboard({ navigation }: any) {
   const { assets, transactions, reminders } = useStore();
@@ -33,12 +34,16 @@ export default function Dashboard({ navigation }: any) {
     0
   );
   const recent = Array.isArray(transactions) ? transactions.slice(0, 6) : [];
-  const upcomingReminders = Array.isArray(reminders) ? reminders : []
-    .filter((r) => new Date(r.dueDate) >= new Date())
-    .sort(
-      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-    )
-    .slice(0, 3);
+  const upcomingReminders: Reminder[] = Array.isArray(reminders)
+    ? reminders
+        .filter((r: Reminder) => r.dueDate >= Timestamp.now())
+        .sort(
+          (a, b) =>
+            new Date(a.dueDate.toDate()).getTime() -
+            new Date(b.dueDate.toDate()).getTime()
+        )
+        .slice(0, 3)
+    : [];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f6f8fb" }}>
@@ -171,7 +176,7 @@ export default function Dashboard({ navigation }: any) {
                       {reminder.title}
                     </Text>
                     <Text style={{ color: "#666", fontSize: 12 }}>
-                      {new Date(reminder.dueDate).toLocaleDateString()}
+                      {reminder.dueDate.toDate().toLocaleDateString()}
                     </Text>
                   </View>
                   <Text style={{ color: "#666", fontSize: 12 }}>
@@ -219,10 +224,7 @@ export default function Dashboard({ navigation }: any) {
                   }}
                   onPress={() =>
                     navigation.navigate("Transactions", {
-                      editTransaction: {
-                        ...item,
-                        date: typeof item.date === 'string' ? item.date : item.date?.toISOString?.() || new Date().toISOString(),
-                      },
+                      editTransaction: item,
                     })
                   }
                 >
@@ -234,7 +236,7 @@ export default function Dashboard({ navigation }: any) {
                   >
                     <Text style={{ fontWeight: "700" }}>₹{item.amount}</Text>
                     <Text style={{ color: "#666" }}>
-                      {new Date(item.date).toLocaleDateString()}
+                      {item.date.toDate().toLocaleString()}
                     </Text>
                   </View>
                   <Text style={{ color: "#666" }}>
