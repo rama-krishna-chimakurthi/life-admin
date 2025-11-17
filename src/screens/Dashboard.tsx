@@ -109,8 +109,8 @@ export default function Dashboard({ navigation }: any) {
             }}
           >
             <Text style={{ fontWeight: "700" }}>Accounts</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Accounts")}>
-              <Ionicons name="add" size={24} color="#3778C2" />
+            <TouchableOpacity onPress={() => navigation.navigate("Accounts")} style={{ padding: 10 }}>
+              <Ionicons name="add" size={32} color="#3778C2" />
             </TouchableOpacity>
           </View>
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>

@@ -46,7 +46,7 @@ export default function Accounts({ navigation }: any) {
         >
           <Text style={{ fontWeight: "700", fontSize: 18 }}>Accounts</Text>
           <TouchableOpacity onPress={() => setShowForm(!showForm)}>
-            <Text style={{ color: "#3778C2", fontSize: 24 }}>
+            <Text style={{ color: "#3778C2", fontSize: 32, padding: 10 }}>
               {showForm ? "×" : "+"}
             </Text>
           </TouchableOpacity>
