@@ -40,7 +40,14 @@ function AppNavigator() {
 
   if (authLoading || loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f6f8fb' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#f6f8fb",
+        }}
+      >
         <Text>Loading...</Text>
       </View>
     );
@@ -54,43 +61,43 @@ function AppNavigator() {
     <NavigationContainer
       theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
     >
-              <Stack.Navigator>
-                <Stack.Screen
-                  name="Dashboard"
-                  component={Dashboard}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="Transactions"
-                  component={Transactions}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="Accounts"
-                  component={Accounts}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="AssetDetail"
-                  component={AssetDetail}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="Reminders"
-                  component={Reminders}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="AddReminder"
-                  component={AddReminder}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="ReminderDetail"
-                  component={ReminderDetail}
-                  options={{ headerShown: false }}
-                />
-              </Stack.Navigator>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Dashboard"
+          component={Dashboard}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Transactions"
+          component={Transactions}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Accounts"
+          component={Accounts}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AssetDetail"
+          component={AssetDetail}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Reminders"
+          component={Reminders}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AddReminder"
+          component={AddReminder}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ReminderDetail"
+          component={ReminderDetail}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
