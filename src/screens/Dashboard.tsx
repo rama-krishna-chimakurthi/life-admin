@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -16,6 +17,7 @@ import AnimatedAssetCard from "../ui/AnimatedAssetCard";
 import AnimatedFAB from "../ui/AnimatedFAB";
 import AppIcon from "../components/AppIcon";
 import { Timestamp } from "firebase/firestore";
+import { truncate } from "@/util/format";
 
 export default function Dashboard({ navigation }: any) {
   const { assets, transactions, reminders } = useStore();
@@ -67,12 +69,25 @@ export default function Dashboard({ navigation }: any) {
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <AppIcon size={40} style={{ marginRight: 12 }} />
+              {useAuth().user?.photoURL ? (
+                <Image
+                  source={{ uri: useAuth().user?.photoURL || "" }}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    marginRight: 12,
+                  }}
+                />
+              ) : (
+                <AppIcon size={40} style={{ marginRight: 12 }} />
+              )}
+
               <View>
                 <Text
                   style={{ color: "#333", fontSize: 20, fontWeight: "600" }}
                 >
-                  Hi,
+                  Hi, {truncate(useAuth().user?.displayName) || "User"}
                 </Text>
                 <Text style={{ color: "#666", fontSize: 14 }}>
                   Your Net Worth
@@ -114,7 +129,10 @@ export default function Dashboard({ navigation }: any) {
             }}
           >
             <Text style={{ fontWeight: "700" }}>Accounts</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Accounts")} style={{ padding: 10 }}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Accounts")}
+              style={{ padding: 10 }}
+            >
               <Ionicons name="add" size={32} color="#3778C2" />
             </TouchableOpacity>
           </View>
