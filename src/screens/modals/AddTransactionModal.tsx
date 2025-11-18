@@ -10,8 +10,9 @@ import {
   ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Transaction, useStore } from "../../store/Store";
+import { useStore } from "../../store/Store";
 import { Timestamp } from "firebase/firestore";
+import { Transaction } from "../../store/types";
 
 function parseNumericInput(input: string) {
   if (!input) return 0;
@@ -81,7 +82,7 @@ export default function AddTransactionModal({
   const [notes, setNotes] = useState(
     editingTransaction ? editingTransaction.notes || "" : ""
   );
-  console.log("editingTransaction:", editingTransaction);
+  // console.log("editingTransaction:", editingTransaction);
   const [date, setDate] = useState(
     editingTransaction ? editingTransaction.date.toDate() : new Date()
   );
