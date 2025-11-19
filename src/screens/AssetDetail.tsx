@@ -5,14 +5,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../store/Store";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-
 export default function AssetDetail({ route , navigation}: any) {
   const { assetId } = route.params;
   const { assets, transactions } = useStore();
   const asset = (assets || []).find((a) => a.id === assetId);
-  const related = (transactions || []).filter((t) => 
-    t.fromAssetId === assetId || t.toAssetId === assetId
+  const related = (transactions || []).filter(
+    (t) => t.fromAssetId === assetId || t.toAssetId === assetId
   );
 
   if (!asset)
@@ -47,7 +45,6 @@ export default function AssetDetail({ route , navigation}: any) {
             alignItems: "center",
             marginBottom: 8,
       }}>
-
       <Text style={{ fontWeight: "700", fontSize: 18 }}>
             Recent Transactions
           </Text>
@@ -103,7 +100,7 @@ export default function AssetDetail({ route , navigation}: any) {
             >
               <Text style={{ fontWeight: "700" }}>₹{item.amount}</Text>
               <Text style={{ color: "#666" }}>
-                {new Date(item.date).toLocaleDateString()}
+                {item.date.toDate().toLocaleDateString()}
               </Text>
             </View>
             <Text style={{ color: "#666" }}>
@@ -117,7 +114,8 @@ export default function AssetDetail({ route , navigation}: any) {
               </Text>
             )}
           </View>
-        )}}
+        );
+      }}
       />
       </View>
     </SafeAreaView>

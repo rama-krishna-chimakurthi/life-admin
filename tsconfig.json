@@ -6,7 +6,7 @@
       "ESNext",
       "DOM"
     ],
-    "jsx": "react-native",
+    "jsx": "react-jsx",
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,

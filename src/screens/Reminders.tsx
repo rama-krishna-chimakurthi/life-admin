@@ -3,6 +3,7 @@ import React from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../store/Store";
+import { Timestamp } from "firebase/firestore";
 
 const categoryColors = {
   Finance: "#3778C2",
@@ -15,10 +16,10 @@ const categoryColors = {
 
 export default function Reminders({ navigation }: any) {
   const { reminders } = useStore();
-  
-  const now = new Date();
-  const upcoming = reminders.filter(r => new Date(r.dueDate) >= now);
-  const overdue = reminders.filter(r => new Date(r.dueDate) < now);
+
+  const now = Timestamp.now();
+  const upcoming = reminders.filter((r) => r.dueDate >= now);
+  const overdue = reminders.filter((r) => r.dueDate < now);
 
   const renderReminder = ({ item }: any) => (
     <TouchableOpacity
@@ -28,14 +29,17 @@ export default function Reminders({ navigation }: any) {
         borderRadius: 10,
         marginBottom: 8,
         borderLeftWidth: 4,
-        borderLeftColor: categoryColors[item.category as keyof typeof categoryColors],
+        borderLeftColor:
+          categoryColors[item.category as keyof typeof categoryColors],
       }}
-      onPress={() => navigation.navigate("ReminderDetail", { reminderId: item.id })}
+      onPress={() =>
+        navigation.navigate("ReminderDetail", { reminderId: item.id })
+      }
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <Text style={{ fontWeight: "700", flex: 1 }}>{item.title}</Text>
         <Text style={{ color: "#666", fontSize: 12 }}>
-          {new Date(item.dueDate).toLocaleDateString()}
+          {item.dueDate.toDate().toLocaleDateString()}
         </Text>
       </View>
       <Text style={{ color: "#666", marginTop: 4 }}>{item.category}</Text>
@@ -50,11 +54,23 @@ export default function Reminders({ navigation }: any) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f6f8fb" }}>
       <View style={{ flex: 1, padding: 16 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
           <Text style={{ fontSize: 24, fontWeight: "700" }}>Reminders</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate("AddReminder")}
-            style={{ backgroundColor: "#3778C2", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 }}
+            style={{
+              backgroundColor: "#3778C2",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 8,
+            }}
           >
             <Text style={{ color: "#fff", fontWeight: "700" }}>+ Add</Text>
           </TouchableOpacity>
@@ -62,7 +78,9 @@ export default function Reminders({ navigation }: any) {
 
         {overdue.length > 0 && (
           <>
-            <Text style={{ fontWeight: "700", color: "#E74C3C", marginBottom: 8 }}>
+            <Text
+              style={{ fontWeight: "700", color: "#E74C3C", marginBottom: 8 }}
+            >
               Overdue ({overdue.length})
             </Text>
             <FlatList
@@ -78,7 +96,11 @@ export default function Reminders({ navigation }: any) {
           Upcoming ({upcoming.length})
         </Text>
         <FlatList
-          data={upcoming.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())}
+          data={upcoming.sort(
+            (a, b) =>
+              new Date(a.dueDate.toDate()).getTime() -
+              new Date(b.dueDate.toDate()).getTime()
+          )}
           keyExtractor={(i) => i.id}
           renderItem={renderReminder}
         />

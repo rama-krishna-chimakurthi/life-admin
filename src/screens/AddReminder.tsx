@@ -1,13 +1,29 @@
 // src/screens/AddReminder.tsx
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Platform } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialIcons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useStore } from "../store/Store";
+import { MaterialIcons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Reminder, useStore } from "../store/Store";
 import { NotificationService } from "../services/NotificationService";
+import { Timestamp } from "firebase/firestore";
 
-const categories = ["Finance", "Document", "Vehicle", "Health", "Subscription", "Others"];
+const categories = [
+  "Finance",
+  "Document",
+  "Vehicle",
+  "Health",
+  "Subscription",
+  "Others",
+];
 const recurrenceTypes = ["One-time", "Monthly"];
 
 const quickDateOptions = [
@@ -19,14 +35,24 @@ const quickDateOptions = [
 
 export default function AddReminder({ navigation, route }: any) {
   const { addReminder, updateReminder } = useStore();
-  const editingReminder = route?.params?.editingReminder;
+  const editingReminder = route?.params?.editingReminder as
+    | Reminder
+    | undefined;
   const [title, setTitle] = useState(editingReminder?.title || "");
-  const [category, setCategory] = useState(editingReminder?.category || "Finance");
-  const [dueDate, setDueDate] = useState(editingReminder ? new Date(editingReminder.dueDate) : new Date());
+  const [category, setCategory] = useState(
+    editingReminder?.category || "Finance"
+  );
+  const [dueDate, setDueDate] = useState(
+    editingReminder ? editingReminder.dueDate.toDate() : new Date()
+  );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const [dateString, setDateString] = useState((editingReminder ? new Date(editingReminder.dueDate) : new Date()).toISOString().slice(0, 16));
+  const [dateString, setDateString] = useState(
+    (editingReminder ? editingReminder.dueDate.toDate() : new Date())
+      .toISOString()
+      .slice(0, 16)
+  );
 
   const setQuickDate = (option: any) => {
     const newDate = new Date();
@@ -45,7 +71,9 @@ export default function AddReminder({ navigation, route }: any) {
     setDateString(newDate.toISOString().slice(0, 16));
   };
   const [notes, setNotes] = useState(editingReminder?.notes || "");
-  const [recurrence, setRecurrence] = useState(editingReminder?.recurrence || "One-time");
+  const [recurrence, setRecurrence] = useState(
+    editingReminder?.recurrence || "One-time"
+  );
   const [disabled, setDisabled] = useState(false);
   const handleSave = async () => {
     setDisabled(true);
@@ -58,12 +86,12 @@ export default function AddReminder({ navigation, route }: any) {
     const reminderData = {
       title: title.trim(),
       category,
-      dueDate,
+      dueDate: Timestamp.fromDate(dueDate),
       notes: notes.trim(),
       recurrence,
     };
 
-    const reminder = editingReminder 
+    const reminder = editingReminder
       ? updateReminder(editingReminder.id, reminderData)
       : await addReminder(reminderData);
 
@@ -77,11 +105,11 @@ export default function AddReminder({ navigation, route }: any) {
         id: reminder.id,
         title: reminder.title,
         body: reminder.notes || `${reminder.category} reminder`,
-        dueDate: reminder.dueDate,
+        dueDate: reminder.dueDate.toDate(),
         recurrence: reminder.recurrence,
       });
     } catch (error) {
-      console.log('Failed to handle notification:', error);
+      console.log("Failed to handle notification:", error);
     }
 
     navigation.goBack();
@@ -90,11 +118,20 @@ export default function AddReminder({ navigation, route }: any) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <ScrollView style={{ flex: 1, padding: 16 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 24,
+          }}
+        >
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={{ color: "#666" }}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: "700" }}>{editingReminder ? "Edit Reminder" : "Add Reminder"}</Text>
+          <Text style={{ fontSize: 18, fontWeight: "700" }}>
+            {editingReminder ? "Edit Reminder" : "Add Reminder"}
+          </Text>
           <TouchableOpacity onPress={handleSave} disabled={disabled}>
             <Text style={{ color: "#3778C2", fontWeight: "700" }}>Save</Text>
           </TouchableOpacity>
@@ -115,7 +152,9 @@ export default function AddReminder({ navigation, route }: any) {
         />
 
         <Text style={{ fontWeight: "600", marginBottom: 8 }}>Category</Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 16 }}>
+        <View
+          style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 16 }}
+        >
           {categories.map((cat) => (
             <TouchableOpacity
               key={cat}
@@ -129,15 +168,21 @@ export default function AddReminder({ navigation, route }: any) {
                 marginBottom: 8,
               }}
             >
-              <Text style={{ color: category === cat ? "#fff" : "#666" }}>{cat}</Text>
+              <Text style={{ color: category === cat ? "#fff" : "#666" }}>
+                {cat}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={{ fontWeight: "600", marginBottom: 8 }}>Due Date & Time</Text>
-        
+        <Text style={{ fontWeight: "600", marginBottom: 8 }}>
+          Due Date & Time
+        </Text>
+
         <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>Quick Options:</Text>
+          <Text style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>
+            Quick Options:
+          </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
             {quickDateOptions.map((option, index) => (
               <TouchableOpacity
@@ -152,15 +197,17 @@ export default function AddReminder({ navigation, route }: any) {
                   marginBottom: 8,
                 }}
               >
-                <Text style={{ color: "#666", fontSize: 12 }}>{option.label}</Text>
+                <Text style={{ color: "#666", fontSize: 12 }}>
+                  {option.label}
+                </Text>
               </TouchableOpacity>
             ))}
 
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
+                flexDirection: "row",
+                alignItems: "center",
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 backgroundColor: "#3778C2",
@@ -169,14 +216,19 @@ export default function AddReminder({ navigation, route }: any) {
                 marginBottom: 8,
               }}
             >
-              <MaterialIcons name="date-range" size={14} color="#fff" style={{ marginRight: 4 }} />
+              <MaterialIcons
+                name="date-range"
+                size={14}
+                color="#fff"
+                style={{ marginRight: 4 }}
+              />
               <Text style={{ color: "#fff", fontSize: 12 }}>Date</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowTimePicker(true)}
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
+                flexDirection: "row",
+                alignItems: "center",
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 backgroundColor: "#3778C2",
@@ -184,18 +236,25 @@ export default function AddReminder({ navigation, route }: any) {
                 marginBottom: 8,
               }}
             >
-              <MaterialIcons name="access-time" size={14} color="#fff" style={{ marginRight: 4 }} />
+              <MaterialIcons
+                name="access-time"
+                size={14}
+                color="#fff"
+                style={{ marginRight: 4 }}
+              />
               <Text style={{ color: "#fff", fontSize: 12 }}>Time</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={{
-          padding: 12,
-          backgroundColor: "#f8f9fa",
-          borderRadius: 8,
-          marginBottom: 16,
-        }}>
+        <View
+          style={{
+            padding: 12,
+            backgroundColor: "#f8f9fa",
+            borderRadius: 8,
+            marginBottom: 16,
+          }}
+        >
           <Text style={{ fontWeight: "600", marginBottom: 4 }}>Selected:</Text>
           <Text style={{ color: "#666" }}>{dueDate.toLocaleString()}</Text>
         </View>
@@ -226,7 +285,10 @@ export default function AddReminder({ navigation, route }: any) {
               setShowTimePicker(false);
               if (selectedTime) {
                 const newDate = new Date(dueDate);
-                newDate.setHours(selectedTime.getHours(), selectedTime.getMinutes());
+                newDate.setHours(
+                  selectedTime.getHours(),
+                  selectedTime.getMinutes()
+                );
                 setDueDate(newDate);
                 setDateString(newDate.toISOString().slice(0, 16));
               }
@@ -248,12 +310,16 @@ export default function AddReminder({ navigation, route }: any) {
                 marginRight: 8,
               }}
             >
-              <Text style={{ color: recurrence === type ? "#fff" : "#666" }}>{type}</Text>
+              <Text style={{ color: recurrence === type ? "#fff" : "#666" }}>
+                {type}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={{ fontWeight: "600", marginBottom: 8 }}>Notes (Optional)</Text>
+        <Text style={{ fontWeight: "600", marginBottom: 8 }}>
+          Notes (Optional)
+        </Text>
         <TextInput
           value={notes}
           onChangeText={setNotes}
