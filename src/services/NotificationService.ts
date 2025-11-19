@@ -1,4 +1,5 @@
 // src/services/NotificationService.ts
+import { Reminder } from '@/store/types';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
@@ -17,16 +18,16 @@ export class NotificationService {
   static async requestPermissions() {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    
+
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
-    
+
     if (finalStatus !== 'granted') {
       throw new Error('Permission not granted for notifications');
     }
-    
+
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'default',
@@ -37,7 +38,18 @@ export class NotificationService {
     }
   }
 
-  static async scheduleReminder(reminder: {
+  static async scheduleReminder(reminder: Reminder) {
+    console.log("Scheduling reminder notification:", reminder);
+    await this.schedule({
+      id: reminder.id,
+      title: reminder.title,
+      body: reminder.notes || `${reminder.category} reminder`,
+      dueDate: reminder.dueDate.toDate(),
+      recurrence: reminder.recurrence,
+    });
+  }
+
+  static async schedule(reminder: {
     id: string;
     title: string;
     body: string;
@@ -45,6 +57,8 @@ export class NotificationService {
     recurrence?: string;
   }) {
     await this.requestPermissions();
+
+    console.log("Scheduling notification for reminder:", reminder);
 
     const trigger: Notifications.DateTriggerInput = {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -66,7 +80,7 @@ export class NotificationService {
     if (reminder.recurrence === 'Monthly') {
       const nextMonth = new Date(reminder.dueDate);
       nextMonth.setMonth(nextMonth.getMonth() + 1);
-      
+
       await Notifications.scheduleNotificationAsync({
         content: {
           title: '🔔 ' + reminder.title,
@@ -78,6 +92,9 @@ export class NotificationService {
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: nextMonth } as Notifications.DateTriggerInput,
       });
     }
+    const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    console.log("Scheduled notifications:", scheduledNotifications);
+    console.log("Scheduled notification ID:", notificationId);
 
     return notificationId;
   }
@@ -88,7 +105,8 @@ export class NotificationService {
     const toCancel = scheduledNotifications.filter(
       notification => notification.content.data?.reminderId === reminderId
     );
-    
+    console.log("Cancelling notifications for reminder:", reminderId, toCancel);
+
     for (const notification of toCancel) {
       await Notifications.cancelScheduledNotificationAsync(notification.identifier);
     }

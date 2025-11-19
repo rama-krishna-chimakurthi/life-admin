@@ -7,14 +7,14 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Reminder, useStore } from "../store/Store";
+import { useStore } from "../store/Store";
 import { NotificationService } from "../services/NotificationService";
 import { Timestamp } from "firebase/firestore";
+import { Reminder } from "../store/types";
 
 const categories = [
   "Finance",
@@ -92,7 +92,7 @@ export default function AddReminder({ navigation, route }: any) {
     };
 
     const reminder = editingReminder
-      ? updateReminder(editingReminder.id, reminderData)
+      ? await updateReminder(editingReminder.id, reminderData)
       : await addReminder(reminderData);
 
     // Handle notifications
@@ -100,14 +100,10 @@ export default function AddReminder({ navigation, route }: any) {
       if (editingReminder) {
         // Cancel old notification and schedule new one
         await NotificationService.cancelNotification(editingReminder.id);
+        console.log("Cancelled old notification for:", editingReminder.id);
       }
-      await NotificationService.scheduleReminder({
-        id: reminder.id,
-        title: reminder.title,
-        body: reminder.notes || `${reminder.category} reminder`,
-        dueDate: reminder.dueDate.toDate(),
-        recurrence: reminder.recurrence,
-      });
+      console.log("Scheduling notification for reminder:", reminder);
+      await NotificationService.scheduleReminder(reminder);
     } catch (error) {
       console.log("Failed to handle notification:", error);
     }

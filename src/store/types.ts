@@ -29,6 +29,8 @@ export type Reminder = {
   recurrence: string;
   attachmentUrl?: string;
   createdAt: Timestamp;
+  completed?: boolean;
+  completedAt?: Timestamp;
 };
 
 export type StoreShape = {
@@ -46,4 +48,5 @@ export type StoreShape = {
   addReminder: (r: Omit<Reminder, "id" | "createdAt">) => Promise<Reminder>;
   updateReminder: (id: string, updates: Partial<Reminder>) => Reminder;
   deleteReminder: (id: string) => void;
+  toggleReminder: (id: string) => void;
 };

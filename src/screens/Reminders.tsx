@@ -1,9 +1,16 @@
 // src/screens/Reminders.tsx
 import React from "react";
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../store/Store";
 import { Timestamp } from "firebase/firestore";
+import { Ionicons } from "@expo/vector-icons";
 
 const categoryColors = {
   Finance: "#3778C2",
@@ -15,11 +22,12 @@ const categoryColors = {
 };
 
 export default function Reminders({ navigation }: any) {
-  const { reminders } = useStore();
+  const { reminders, toggleReminder } = useStore();
 
   const now = Timestamp.now();
-  const upcoming = reminders.filter((r) => r.dueDate >= now);
-  const overdue = reminders.filter((r) => r.dueDate < now);
+  const upcoming = reminders.filter((r) => r.dueDate >= now && !r.completed);
+  const overdue = reminders.filter((r) => r.dueDate < now && !r.completed);
+  const completed = reminders.filter((r) => r.completed);
 
   const renderReminder = ({ item }: any) => (
     <TouchableOpacity
@@ -41,6 +49,23 @@ export default function Reminders({ navigation }: any) {
         <Text style={{ color: "#666", fontSize: 12 }}>
           {item.dueDate.toDate().toLocaleDateString()}
         </Text>
+        <TouchableOpacity
+          onPress={() => toggleReminder(item.id)}
+          style={{
+            marginLeft: 8,
+            padding: 6,
+            backgroundColor: item.completed ? "#2ed573" : "transparent",
+            borderRadius: 16,
+            borderWidth: item.completed ? 0 : 2,
+            borderColor: "#ddd",
+          }}
+        >
+          <Ionicons
+            name={item.completed ? "checkmark" : "ellipse-outline"}
+            size={16}
+            color={item.completed ? "#fff" : "#ddd"}
+          />
+        </TouchableOpacity>
       </View>
       <Text style={{ color: "#666", marginTop: 4 }}>{item.category}</Text>
       {item.notes && (
@@ -76,34 +101,55 @@ export default function Reminders({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {overdue.length > 0 && (
-          <>
-            <Text
-              style={{ fontWeight: "700", color: "#E74C3C", marginBottom: 8 }}
-            >
-              Overdue ({overdue.length})
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {overdue.length > 0 && (
+            <View style={{ marginBottom: 12 }}>
+              <Text
+                style={{ fontWeight: "700", color: "#E74C3C", marginBottom: 8 }}
+              >
+                Overdue ({overdue.length})
+              </Text>
+              <FlatList
+                data={overdue}
+                keyExtractor={(i) => i.id}
+                renderItem={renderReminder}
+                scrollEnabled={false}
+              />
+            </View>
+          )}
+
+          <View style={{ marginBottom: 12 }}>
+            <Text style={{ fontWeight: "700", marginBottom: 8 }}>
+              Upcoming ({upcoming.length})
             </Text>
             <FlatList
-              data={overdue}
+              data={upcoming.sort(
+                (a, b) =>
+                  new Date(a.dueDate.toDate()).getTime() -
+                  new Date(b.dueDate.toDate()).getTime()
+              )}
               keyExtractor={(i) => i.id}
               renderItem={renderReminder}
-              style={{ marginBottom: 16 }}
+              scrollEnabled={false}
             />
-          </>
-        )}
+          </View>
 
-        <Text style={{ fontWeight: "700", marginBottom: 8 }}>
-          Upcoming ({upcoming.length})
-        </Text>
-        <FlatList
-          data={upcoming.sort(
-            (a, b) =>
-              new Date(a.dueDate.toDate()).getTime() -
-              new Date(b.dueDate.toDate()).getTime()
+          {completed.length > 0 && (
+            <View>
+              <Text
+                style={{ fontWeight: "700", color: "#2ed573", marginBottom: 8 }}
+              >
+                Completed ({completed.length})
+              </Text>
+              <FlatList
+                data={completed}
+                keyExtractor={(i) => i.id}
+                renderItem={renderReminder}
+                scrollEnabled={false}
+              />
+            </View>
           )}
-          keyExtractor={(i) => i.id}
-          renderItem={renderReminder}
-        />
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
