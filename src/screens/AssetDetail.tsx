@@ -3,8 +3,11 @@ import React from "react";
 import { View, Text, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../store/Store";
+import { TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function AssetDetail({ route }: any) {
+
+export default function AssetDetail({ route , navigation}: any) {
   const { assetId } = route.params;
   const { assets, transactions } = useStore();
   const asset = (assets || []).find((a) => a.id === assetId);
@@ -36,10 +39,44 @@ export default function AssetDetail({ route }: any) {
           ₹{Number(asset.balance).toLocaleString()}
         </Text>
       </View>
+      <View
+          style={{
+            width: "100%",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 8,
+      }}>
 
-      <Text style={{ fontWeight: "700", marginBottom: 8 }}>
-        Recent Transactions
-      </Text>
+      <Text style={{ fontWeight: "700", fontSize: 18 }}>
+            Recent Transactions
+          </Text>
+      
+      <TouchableOpacity
+           onPress={() =>
+            navigation?.navigate("Transactions", {
+            openAdd: true,
+             fromAssetId: assetId, 
+          })
+        }
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#3778C2",
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 8,
+              }}
+          >
+            <Ionicons
+              name="add"
+              size={16}
+              color="#fff"
+              style={{ marginRight: 6 }}
+            />
+            <Text style={{ color: "#fff", fontWeight: "700" }}>Add</Text>
+          </TouchableOpacity>
+          </View>
       <FlatList
         data={related}
         keyExtractor={(i) => i.id}
