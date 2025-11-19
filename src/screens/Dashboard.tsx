@@ -11,16 +11,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { Reminder, useStore } from "../store/Store";
+import { useStore } from "../store/Store";
 import { useAuth } from "../store/AuthStore";
 import AnimatedAssetCard from "../ui/AnimatedAssetCard";
 import AnimatedFAB from "../ui/AnimatedFAB";
 import AppIcon from "../components/AppIcon";
 import { Timestamp } from "firebase/firestore";
 import { truncate } from "@/util/format";
+import { Reminder } from "../store/types";
 
 export default function Dashboard({ navigation }: any) {
-  const { assets, transactions, reminders } = useStore();
+  const { assets, transactions, reminders, toggleReminder } = useStore();
   const { signOut } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -38,7 +39,7 @@ export default function Dashboard({ navigation }: any) {
   const recent = Array.isArray(transactions) ? transactions.slice(0, 6) : [];
   const upcomingReminders: Reminder[] = Array.isArray(reminders)
     ? reminders
-        .filter((r: Reminder) => r.dueDate >= Timestamp.now())
+        .filter((r: Reminder) => r.dueDate >= Timestamp.now() && !r.completed)
         .sort(
           (a, b) =>
             new Date(a.dueDate.toDate()).getTime() -
@@ -168,7 +169,7 @@ export default function Dashboard({ navigation }: any) {
                 </TouchableOpacity>
               </View>
               {upcomingReminders.map((reminder) => (
-                <TouchableOpacity
+                <View
                   key={reminder.id}
                   style={{
                     padding: 12,
@@ -178,29 +179,54 @@ export default function Dashboard({ navigation }: any) {
                     borderLeftWidth: 4,
                     borderLeftColor: "#3778C2",
                   }}
-                  onPress={() =>
-                    navigation.navigate("ReminderDetail", {
-                      reminderId: reminder.id,
-                    })
-                  }
                 >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigation.navigate("ReminderDetail", {
+                        reminderId: reminder.id,
+                      })
+                    }
                   >
-                    <Text style={{ fontWeight: "700", flex: 1 }}>
-                      {reminder.title}
-                    </Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={{ fontWeight: "700", flex: 1 }}>
+                        {reminder.title}
+                      </Text>
+                      <Text style={{ color: "#666", fontSize: 12 }}>
+                        {reminder.dueDate.toDate().toLocaleDateString()}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => toggleReminder(reminder.id)}
+                        style={{
+                          marginLeft: 8,
+                          padding: 6,
+                          backgroundColor: reminder.completed
+                            ? "#2ed573"
+                            : "transparent",
+                          borderRadius: 16,
+                          borderWidth: reminder.completed ? 0 : 2,
+                          borderColor: "#ddd",
+                        }}
+                      >
+                        <Ionicons
+                          name={
+                            reminder.completed ? "checkmark" : "ellipse-outline"
+                          }
+                          size={16}
+                          color={reminder.completed ? "#fff" : "#ddd"}
+                        />
+                      </TouchableOpacity>
+                    </View>
                     <Text style={{ color: "#666", fontSize: 12 }}>
-                      {reminder.dueDate.toDate().toLocaleDateString()}
+                      {reminder.category}
                     </Text>
-                  </View>
-                  <Text style={{ color: "#666", fontSize: 12 }}>
-                    {reminder.category}
-                  </Text>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                </View>
               ))}
             </View>
           )}

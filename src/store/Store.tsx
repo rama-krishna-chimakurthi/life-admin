@@ -70,11 +70,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       adjustAssetBalances,
       reverseAssetBalances
     );
-  const { addReminder, updateReminder, deleteReminder } = createReminderActions(
-    user,
-    reminders,
-    setReminders
-  );
+  const { addReminder, updateReminder, deleteReminder, toggleReminder } =
+    createReminderActions(user, reminders, setReminders);
 
   const store: StoreShape = {
     user,
@@ -91,6 +88,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addReminder,
     updateReminder,
     deleteReminder,
+    toggleReminder,
   };
 
   return (
